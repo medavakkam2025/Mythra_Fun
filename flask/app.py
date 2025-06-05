@@ -27,7 +27,9 @@ def index():
     conn = sqlite3.connect('database1.db')
     items = conn.execute("SELECT * FROM stock").fetchall()
     conn.close()
-    return render_template('index.html', items=items)
+
+    total_profit = sum((item[3]) * item[4] for item in items)  # (Selling - Purchase) × Qty
+    return render_template('index.html', items=items, total_profit=total_profit)
 
 @app.route('/add', methods=['POST'])
 def add():
@@ -130,6 +132,21 @@ def download():
         mimetype="text/csv",
         headers={"Content-Disposition": "attachment; filename=stock_report.csv"}
     )
+@app.route('/sell/<int:item_id>')
+def sell(item_id):
+    conn = sqlite3.connect('database1.db')
+    cursor = conn.cursor()
+
+    # Reduce quantity by 1 if greater than 0
+    cursor.execute("SELECT quantity FROM stock WHERE id=?", (item_id,))
+    qty = cursor.fetchone()[0]
+
+    if qty > 0:
+        cursor.execute("UPDATE stock SET quantity = quantity - 1 WHERE id=?", (item_id,))
+        conn.commit()
+
+    conn.close()
+    return redirect('/')
 
 if __name__ == '__main__':
     init_db()
