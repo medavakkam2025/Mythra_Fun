@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1"> <!-- Responsive meta tag -->
+  <title>Edit Item</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container py-4">
+
+  <h2 class="mb-4">Edit Item</h2>
+
+  <form method="POST" enctype="multipart/form-data" class="row g-3">
+    <input type="hidden" name="current_image" value="{{ item[5] }}">
+
+    <div class="col-12 col-md-6 col-lg-4">
+      <input name="name" value="{{ item[1] }}" class="form-control" placeholder="Item Name" required>
+    </div>
+
+    <div class="col-6 col-md-3 col-lg-2">
+      <input name="purchase_price" value="{{ item[2] }}" type="number" step="0.01" class="form-control" placeholder="Purchase Price" required>
+    </div>
+
+    <div class="col-6 col-md-3 col-lg-2">
+      <input name="selling_price" value="{{ item[3] }}" type="number" step="0.01" class="form-control" placeholder="Selling Price" required>
+    </div>
+
+    <div class="col-6 col-md-3 col-lg-2">
+      <input name="quantity" value="{{ item[4] }}" type="number" class="form-control" placeholder="Quantity" required>
+    </div>
+
+    <div class="col-6 col-md-3 col-lg-2">
+      <input type="file" name="image" class="form-control" accept="image/*">
+    </div>
+
+    <div class="col-12 mt-3">
+      <button class="btn btn-primary me-2">Update</button>
+      <a href="/" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+
+</body>
+</html>

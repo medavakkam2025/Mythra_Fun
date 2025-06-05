@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1"> <!-- Important for responsiveness -->
+  <title>Inventory</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .table-responsive img {
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+<body class="container py-4">
+
+  <h2 class="mb-4">🛒 Inventory Manager</h2>
+
+  <form action="/add" method="POST" enctype="multipart/form-data" class="row g-3 mb-4">
+    <div class="col-12 col-md-6 col-lg-2">
+      <input name="name" class="form-control" placeholder="Item Name" required>
+    </div>
+    <div class="col-12 col-md-6 col-lg-2">
+      <input name="purchase_price" type="number" step="0.01" class="form-control" placeholder="Purchase Price" required>
+    </div>
+    <div class="col-12 col-md-6 col-lg-2">
+      <input name="selling_price" type="number" step="0.01" class="form-control" placeholder="Selling Price" required>
+    </div>
+    <div class="col-12 col-md-6 col-lg-2">
+      <input name="quantity" type="number" class="form-control" placeholder="Quantity" required>
+    </div>
+    <div class="col-12 col-lg-2">
+      <input type="file" name="image" class="form-control" accept="image/*">
+    </div>
+    <div class="col-12 col-lg-2 d-grid">
+      <button class="btn btn-success">Add</button>
+    </div>
+  </form>
+
+  <div class="table-responsive">
+    <table class="table table-bordered align-middle">
+      <thead class="table-dark text-center">
+        <tr>
+          <th>Image</th>
+          <th>Item</th>
+          <th>Purchase</th>
+          <th>Qty</th>
+          <th>Purchase Total</th>
+          <th>Selling</th>
+          <th>Profit/Item</th>
+          <th>Total Profit</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td class="text-center">
+            {% if item[5] %}
+              <img src="{{ url_for('static', filename='images/' + item[5]) }}" width="50">
+            {% else %}
+              No Image
+            {% endif %}
+          </td>
+          <td>{{ item[1] }}</td>
+          <td>₹{{ item[2] }}</td>
+          <td>{{ item[4] }}</td>
+          <td>₹{{ item[2] * item[4] }}</td>
+          <td>₹{{ item[3] }}</td>
+          <td>₹{{ item[3] - item[2] }}</td>
+          <td>₹{{ (item[3] - item[2]) * item[4] }}</td>
+          <td class="text-nowrap">
+            <a href="/edit/{{ item[0] }}" class="btn btn-warning btn-sm">Edit</a>
+            <a href="/delete/{{ item[0] }}" class="btn btn-danger btn-sm" onclick="return confirm('Delete this item?')">Delete</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</body>
+</html>
