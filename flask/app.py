@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for
 import sqlite3, os
 from werkzeug.utils import secure_filename
+import csv
+from flask import Response
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'static/images'
@@ -95,6 +97,39 @@ def delete(item_id):
     conn.commit()
     conn.close()
     return redirect('/')
+
+
+@app.route('/download')
+def download():
+    conn = sqlite3.connect('database1.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM stock")
+    items = cursor.fetchall()
+    conn.close()
+
+    # Use StringIO to create CSV in memory
+    from io import StringIO
+    si = StringIO()
+    cw = csv.writer(si)
+
+    # Write header
+    cw.writerow(["ID", "Name", "Purchase Price", "Selling Price", "Quantity", "Profit per Item", "Total Profit"])
+
+    # Write data rows
+    for item in items:
+        id_, name, purchase_price, selling_price, quantity, image = item
+        profit_per_item = selling_price - purchase_price
+        total_profit = profit_per_item * quantity
+        cw.writerow([id_, name, purchase_price, selling_price, quantity, profit_per_item, total_profit])
+
+    output = si.getvalue()
+    si.close()
+
+    return Response(
+        output,
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment; filename=stock_report.csv"}
+    )
 
 if __name__ == '__main__':
     init_db()
