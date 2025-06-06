@@ -1,8 +1,7 @@
-from flask import Flask, render_template, request, redirect, url_for
-import sqlite3, os
+from flask import Flask, render_template, request, redirect, url_for, Response
+import sqlite3, os, csv
 from werkzeug.utils import secure_filename
-import csv
-from flask import Response
+from datetime import datetime
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'static/images'
@@ -20,16 +19,46 @@ def init_db():
             image TEXT
         )
     ''')
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS sales (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            item_id INTEGER,
+            quantity INTEGER,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (item_id) REFERENCES stock(id)
+        )
+    ''')
     conn.close()
 
 @app.route('/')
 def index():
     conn = sqlite3.connect('database1.db')
     items = conn.execute("SELECT * FROM stock").fetchall()
+
+    # Total profit from remaining stock
+    total_profit = sum((item[3] - item[2]) * item[4] for item in items)
+
+    # Today's sales
+    today = datetime.now().strftime('%Y-%m-%d')
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT s.quantity, st.purchase_price, st.selling_price
+        FROM sales s
+        JOIN stock st ON s.item_id = st.id
+        WHERE DATE(s.timestamp) = ?
+    ''', (today,))
+    today_sales = cursor.fetchall()
     conn.close()
 
-    total_profit = sum((item[3]) * item[4] for item in items)  # (Selling - Purchase) × Qty
-    return render_template('index.html', items=items, total_profit=total_profit)
+    total_items_sold_today = sum(s[0] for s in today_sales)
+    profit_today = sum((s[2] - s[1]) * s[0] for s in today_sales)
+
+    return render_template('index.html',
+        items=items,
+        total_profit=total_profit,
+        total_items_sold_today=total_items_sold_today,
+        profit_today=profit_today
+    )
 
 @app.route('/add', methods=['POST'])
 def add():
@@ -100,6 +129,21 @@ def delete(item_id):
     conn.close()
     return redirect('/')
 
+@app.route('/sell/<int:item_id>', methods=['POST'])
+def sell(item_id):
+    conn = sqlite3.connect('database1.db')
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT quantity FROM stock WHERE id=?", (item_id,))
+    result = cursor.fetchone()
+
+    if result and result[0] > 0:
+        cursor.execute("UPDATE stock SET quantity = quantity - 1 WHERE id=?", (item_id,))
+        cursor.execute("INSERT INTO sales (item_id, quantity) VALUES (?, ?)", (item_id, 1))
+        conn.commit()
+
+    conn.close()
+    return redirect('/')
 
 @app.route('/download')
 def download():
@@ -109,15 +153,11 @@ def download():
     items = cursor.fetchall()
     conn.close()
 
-    # Use StringIO to create CSV in memory
     from io import StringIO
     si = StringIO()
     cw = csv.writer(si)
 
-    # Write header
     cw.writerow(["ID", "Name", "Purchase Price", "Selling Price", "Quantity", "Profit per Item", "Total Profit"])
-
-    # Write data rows
     for item in items:
         id_, name, purchase_price, selling_price, quantity, image = item
         profit_per_item = selling_price - purchase_price
@@ -132,24 +172,9 @@ def download():
         mimetype="text/csv",
         headers={"Content-Disposition": "attachment; filename=stock_report.csv"}
     )
-@app.route('/sell/<int:item_id>')
-def sell(item_id):
-    conn = sqlite3.connect('database1.db')
-    cursor = conn.cursor()
-
-    # Reduce quantity by 1 if greater than 0
-    cursor.execute("SELECT quantity FROM stock WHERE id=?", (item_id,))
-    qty = cursor.fetchone()[0]
-
-    if qty > 0:
-        cursor.execute("UPDATE stock SET quantity = quantity - 1 WHERE id=?", (item_id,))
-        conn.commit()
-
-    conn.close()
-    return redirect('/')
 
 if __name__ == '__main__':
     init_db()
     if not os.path.exists('static/images'):
         os.makedirs('static/images')
-    app.run(debug=True,host="0.0.0.0")
+    app.run(debug=True, host="0.0.0.0")

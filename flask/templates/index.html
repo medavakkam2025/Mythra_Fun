@@ -10,6 +10,7 @@
 
   <h2 class="mb-4">🛒 Inventory Manager</h2>
 
+  <!-- Add Form -->
   <form action="/add" method="POST" enctype="multipart/form-data" class="row g-3 mb-4">
     <div class="col-md-2 col-6"><input name="name" class="form-control" placeholder="Item Name" required></div>
     <div class="col-md-2 col-6"><input name="purchase_price" type="number" step="0.01" class="form-control" placeholder="Purchase ₹" required></div>
@@ -19,6 +20,7 @@
     <div class="col-md-2 col-6"><button class="btn btn-success w-100">Add</button></div>
   </form>
 
+  <!-- Inventory Table -->
   <div class="table-responsive">
     <table class="table table-bordered table-hover align-middle text-center">
       <thead class="table-dark">
@@ -59,21 +61,25 @@
           <td>₹{{ (item[3] - item[2]) * item[4] }}</td>
           <td class="d-flex flex-column gap-1">
             {% if item[4] > 0 %}
-              <a href="/sell/{{ item[0] }}" class="btn btn-sm btn-primary">Sell 1</a>
+              <form action="/sell/{{ item[0] }}" method="POST">
+                <button class="btn btn-sm btn-primary w-100 mb-1">Sell 1</button>
+              </form>
             {% endif %}
-            <a href="/edit/{{ item[0] }}" class="btn btn-sm btn-warning">Edit</a>
-            <a href="/delete/{{ item[0] }}" class="btn btn-sm btn-danger" onclick="return confirm('Delete this item?')">Delete</a>
+            <a href="/edit/{{ item[0] }}" class="btn btn-sm btn-warning w-100 mb-1">Edit</a>
+            <a href="/delete/{{ item[0] }}" class="btn btn-sm btn-danger w-100" onclick="return confirm('Delete this item?')">Delete</a>
           </td>
-          
         </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
 
+  <!-- Summary Section -->
   <div class="mt-4">
-    <h5 class="text-success">📊 Current Total Profit: ₹{{ total_profit }}</h5>
-    <a href="/download" class="btn btn-outline-secondary mt-2">⬇️ Download CSV</a>
+    <h5 class="text-success">📊 Current Stock Profit: ₹{{ total_profit }}</h5>
+    <h5 class="text-primary">📅 Today Sold: {{ total_items_sold_today }} items</h5>
+    <h5 class="text-primary">💰 Today Profit: ₹{{ profit_today }}</h5>
+    <a href="/download" class="btn btn-outline-secondary mt-3">⬇️ Download CSV</a>
   </div>
 
 </body>
