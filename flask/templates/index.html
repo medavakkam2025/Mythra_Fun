@@ -11,10 +11,10 @@
   <h2 class="mb-4">🛒 Inventory Manager</h2>
   <!-- Summary Section -->
   <div class="mt-4">
-    <span class="text-success">📊 Current Stock Profit: ₹{{ total_profit }}</span>
-    <span class="text-primary">📅 Today Sold: {{ total_items_sold_today }} items</span>
-    <span class="text-primary">💰 Today Profit: ₹{{ profit_today }}</span>
-    <a href="/download" class="btn btn-outline-secondary mt-3">⬇️ Download CSV</a>
+    <span class="text-success">📊 Current Stock Profit: ₹{{ total_profit }}</span><span>|</span>
+    <span class="text-primary">📅 Today Sold: {{ total_items_sold_today }} items</span><span>|</span>
+    <span class="text-primary">💰 Today Profit: ₹{{ profit_today }}</span> <span>|</span>
+    <a href="/download">⬇️ Download CSV</a>
   </div>
   <!-- Add Form -->
   <form action="/add" method="POST" enctype="multipart/form-data" class="row g-3 mb-4">
