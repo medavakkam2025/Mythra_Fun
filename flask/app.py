@@ -32,15 +32,21 @@ def init_db():
 
 @app.route('/')
 def index():
+    search_query = request.args.get('q', '')
+
     conn = sqlite3.connect('database1.db')
-    items = conn.execute("SELECT * FROM stock").fetchall()
+    cursor = conn.cursor()
+
+    if search_query:
+        items = cursor.execute("SELECT * FROM stock WHERE name LIKE ?", ('%' + search_query + '%',)).fetchall()
+    else:
+        items = cursor.execute("SELECT * FROM stock").fetchall()
 
     # Total profit from remaining stock
     total_profit = sum((item[3] - item[2]) * item[4] for item in items)
 
     # Today's sales
     today = datetime.now().strftime('%Y-%m-%d')
-    cursor = conn.cursor()
     cursor.execute('''
         SELECT s.quantity, st.purchase_price, st.selling_price
         FROM sales s
@@ -57,8 +63,13 @@ def index():
         items=items,
         total_profit=total_profit,
         total_items_sold_today=total_items_sold_today,
-        profit_today=profit_today
+        profit_today=profit_today,
+        search_query=search_query
     )
+
+@app.route('/Add_list')
+def Add_list():
+    return render_template('add.html')
 
 @app.route('/add', methods=['POST'])
 def add():
@@ -79,7 +90,7 @@ def add():
                  (name, purchase_price, selling_price, quantity, image_name))
     conn.commit()
     conn.close()
-    return redirect('/')
+    return redirect('/Add_list')
 
 @app.route('/edit/<int:item_id>', methods=['GET', 'POST'])
 def edit(item_id):
